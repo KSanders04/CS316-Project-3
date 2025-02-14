@@ -21,24 +21,28 @@ public class Server {
             byte[] requestBytes = new byte[bytesRead];
             buffer.get(requestBytes);
             String request = new String(requestBytes);
-            System.out.println("Request recieved: " + request);
+            System.out.println("Request received: " + request);
 
-            //formatting request for readability and determines command
+            //Formatting request for readability and determines command
             String[] parts = request.split("\\|");
-            String command = parts[0];
+            String command = parts[0]; //Reads the first byte of command, as instructed
 
             ByteBuffer responseBuffer;
             switch (command) {
                 case "D": //Deletes files from local server
-                case "F": //List the file names that exist
+                    if(parts.length < 2) break;
+                case "L": //List the file names that exist; Only command that only needs 1 input
                 case "U": //Upload a file to the server
+                    if(parts.length < 2) break;
                 case "S": //Downloads a file from the server
+                    if(parts.length < 2) break;
                 case "R": //Renames a file from the server if it exists
-                default:
+                    if(parts.length < 2) break;
+                default: //Default "if not any above command, return else" case
                     System.out.println("Invalid request.");
                     break;
             }
-            serverChannel.close();
+            serverChannel.close(); //Closes the serverChannel after determining case and following operations
         }
     }
 }
