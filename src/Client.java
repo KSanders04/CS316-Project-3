@@ -1,52 +1,98 @@
-import java.io.FileOutputStream;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.SocketChannel;
+import java.io.*;
+import java.net.*;
 import java.util.Scanner;
+
 public class Client {
-    public static void main(String[] args) throws Exception {
-        if (args.length != 2) {
-            System.out.println("Please provide <serverIP> and <serverPort>");
+    public static void main(String[] args) {
+        if (args.length < 2) {
+            System.out.println("Usage: java Client <server_ip> <port>");
             return;
         }
+
+        String serverIp = args[0];
         int serverPort = Integer.parseInt(args[1]);
-        Scanner keyboard = new Scanner(System.in);
-        String filename = keyboard.nextLine();
-        SocketChannel channel = SocketChannel.open();
-        channel.connect(
-                new InetSocketAddress(args[0], serverPort)
-        );
 
-        while (true){
-            Scanner scan = new Scanner(System.in);
-            System.out.println("Please choose an option:\n" +
-                    "1. List files\n" +
-                    "2. Delete a file\n" +
-                    "3. Rename a file\n" +
-                    "4. Download a file from server\n" +
-                    "5. Upload a file to server\n" +
-                    ">> ");
-            switch (){
+        try (Socket socket = new Socket(serverIp, serverPort);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             DataInputStream dataIn = new DataInputStream(socket.getInputStream());
+             DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
+             Scanner scan = new Scanner(System.in)) {
 
+            while (true) {
+                System.out.print("Please choose an option:\n" +
+                        "1. List files\n" +
+                        "2. Delete a file\n" +
+                        "3. Rename a file\n" +
+                        "4. Download a file from server\n" +
+                        "5. Upload a file to server\n" +
+                        ">> ");
+                String input = scan.next();
+                if (input.equalsIgnoreCase("EXIT")) break;
+
+                String[] parts = input.split(" ", 2);
+                String operation = parts[0].toUpperCase();
+
+                out.println(input);
+
+                switch (operation) {
+                    case "LIST":
+                        String response;
+                        while (!(response = in.readLine()).equals("S END")) {
+                            System.out.println(response);
+                        }
+                        break;
+                    case "DELETE":
+                    case "RENAME":
+                    case "DOWNLOAD":
+                        receiveFile(parts[1], dataIn);
+                        break;
+                    case "UPLOAD":
+                        System.out.println("Server: " + in.readLine());
+                        sendFile(parts[1], dataOut);
+                        break;
+                    default:
+                        System.out.println("Invalid command");
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void receiveFile(String fileName, DataInputStream dataIn) throws IOException {
+        long fileSize = dataIn.readLong();
+        if (fileSize == -1) {
+            System.out.println("File not found on server.");
+            return;
+        }
+
+        File file = new File("client_files", fileName);
+        try (FileOutputStream fileOut = new FileOutputStream(file)) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = dataIn.read(buffer)) != -1) {
+                fileOut.write(buffer, 0, bytesRead);
             }
         }
-        ByteBuffer buffer = ByteBuffer.wrap(filename.getBytes());
-        channel.write(buffer);
-        channel.shutdownOutput();
+        System.out.println("File downloaded successfully.");
+    }
 
-        FileOutputStream fs = new FileOutputStream(
-                "ClientFiles/"+filename, true
-        );
-        FileChannel fc = fs.getChannel();
-        ByteBuffer fileContent =
-                ByteBuffer.allocate(1024);
-        while(channel.read(fileContent) >=0) {
-            fileContent.flip();
-            fc.write(fileContent);
-            fileContent.clear();
+    private static void sendFile(String fileName, DataOutputStream dataOut) throws IOException {
+        File file = new File(fileName);
+        if (!file.exists()) {
+            System.out.println("File not found.");
+            return;
         }
-        fs.close();
-        channel.close();
+
+        try (FileInputStream fileIn = new FileInputStream(file)) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = fileIn.read(buffer)) != -1) {
+                dataOut.write(buffer, 0, bytesRead);
+            }
+        }
+        System.out.println("File uploaded successfully.");
     }
 }
