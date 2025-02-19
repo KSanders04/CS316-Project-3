@@ -66,11 +66,29 @@ public class Client {
     private static void deleteFile(PrintWriter out, BufferedReader in) throws IOException {
         System.out.print("Enter file to delete: ");
         Scanner scanner = new Scanner(System.in);
-        String fileToDelete = scanner.nextLine();
+        String fileToDelete = scanner.nextLine().trim(); // Remove extra spaces
+
+        if (fileToDelete.isEmpty()) {
+            System.out.println("Invalid input. Please enter a valid file name.");
+            return; // Early return if the file name is empty
+        }
+
+        System.out.println("Sending delete request for: " + fileToDelete); // Debugging line
         out.println("DELETE " + fileToDelete);
-        String deleteResponse = in.readLine();
-        System.out.println(deleteResponse.equals("S_OK") ? "File deleted successfully." : "File deletion failed.");
+
+        String deleteResponse = in.readLine(); // Read server's response
+        System.out.println("Server response: " + deleteResponse); // Debugging line
+
+        if ("File deleted successfully.".equals(deleteResponse)) {
+            System.out.println("File deleted successfully.\n");
+        } else if ("File deletion failed.".equals(deleteResponse)) {
+            System.out.println("File deletion failed.\n");
+        } else {
+            System.out.println("Unexpected server response: " + deleteResponse + "\n");
+        }
     }
+
+
 
     private static void receiveFile(String fileName, DataInputStream dataIn) throws IOException {
         long fileSize = dataIn.readLong();
@@ -106,4 +124,6 @@ public class Client {
         }
         System.out.println("File uploaded successfully.");
     }
+
+
 }

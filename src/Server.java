@@ -41,9 +41,7 @@ public class Server {
                             listFiles(out);
                             break;
                         case "DELETE":
-                            if (parts.length < 2) {
-                                out.println("S_FAIL");
-                            } else {
+                            if(parts.length >= 2) {
                                 deleteFile(out, parts[1]);
                             }
                             break;
@@ -82,13 +80,16 @@ public class Server {
         }
 
         private void deleteFile(PrintWriter out, String fileName) {
-                File file = new File(DIRECTORY, fileName);
-                if (file.exists() && file.delete()) {
-                    out.println("S_OK");
-                } else {
-                    out.println("S_FAIL");
-                }
+            System.out.println("Received delete command for: " + fileName); // Debugging line
+            File file = new File(DIRECTORY, fileName);
+
+            if (file.exists() && file.delete()) {
+                out.println("File deleted successfully.");
+            } else {
+                out.println("File deletion failed.");
+            }
         }
+
 
         private void renameFile(PrintWriter out, String params) {
             String[] names = params.split(" ");
