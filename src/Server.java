@@ -32,6 +32,9 @@ public class Server {
             ByteBuffer responseBuffer;
             switch (command) {
                 case "L":
+                    if (command == "L"){
+
+                    }
                 case "D":
                 case "R":
                 case "S":
