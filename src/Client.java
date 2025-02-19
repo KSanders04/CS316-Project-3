@@ -19,8 +19,6 @@ public class Client {
              DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
              Scanner scanner = new Scanner(System.in)) {
 
-            System.out.println("Connected to server at " + serverIp + ":" + serverPort);
-
             while (true) {
                 System.out.print("Please choose an option:\n" +
                         "1. List files\n" +
@@ -40,7 +38,7 @@ public class Client {
                 switch (operation) {
                     case "LIST":
                         String response;
-                        while (!(response = in.readLine()).equals("S END")) {
+                        while (!(response = in.readLine()).equals("END")) {
                             System.out.println(response);
                         }
                         break;
@@ -70,7 +68,7 @@ public class Client {
             return;
         }
 
-        File file = new File("client_files", fileName);
+        File file = new File("ClientFiles", fileName);
         try (FileOutputStream fileOut = new FileOutputStream(file)) {
             byte[] buffer = new byte[4096];
             int bytesRead;
@@ -95,6 +93,6 @@ public class Client {
                 dataOut.write(buffer, 0, bytesRead);
             }
         }
-        System.out.println("File uploaded successfully."); //comment
+        System.out.println("File uploaded successfully.");
     }
 }

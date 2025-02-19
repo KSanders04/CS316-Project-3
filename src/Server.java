@@ -3,15 +3,13 @@ import java.net.*;
 
 public class Server {
     private static final int PORT = 3000;
-    private static final String DIRECTORY = "server_files"; // Folder to store files
+    private static final String DIRECTORY = "ServerFiles";
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Server is running on port " + PORT + "...");
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("Client connected: " + clientSocket.getInetAddress());
                 new ClientHandler(clientSocket).start();
             }
         } catch (IOException e) {
@@ -53,10 +51,10 @@ public class Server {
                             break;
                         case "UPLOAD":
                             receiveFile(parts[1], dataIn);
-                            out.println("S Upload complete");
+                            out.println("Upload complete");
                             break;
                         default:
-                            out.println("S Invalid command");
+                            out.println("Invalid command");
                     }
                 }
             } catch (IOException e) {
@@ -67,7 +65,7 @@ public class Server {
         private void listFiles(PrintWriter out) {
             File dir = new File(DIRECTORY);
             if (!dir.exists() || !dir.isDirectory()) {
-                out.println("S No files found");
+                out.println("No files found");
                 return;
             }
             File[] files = dir.listFiles();
@@ -76,37 +74,39 @@ public class Server {
                     out.println(file.getName());
                 }
             }
-            out.println("S END");
+            out.println("END");
         }
 
         private void deleteFile(PrintWriter out, String fileName) {
+
+
             File file = new File(DIRECTORY, fileName);
             if (file.exists() && file.delete()) {
-                out.println("S File deleted successfully");
+                out.println("File deleted successfully");
             } else {
-                out.println("S File not found or cannot be deleted");
+                out.println("File not found or cannot be deleted");
             }
         }
 
         private void renameFile(PrintWriter out, String params) {
             String[] names = params.split(" ");
             if (names.length < 2) {
-                out.println("S Invalid rename command");
+                out.println("Invalid rename command");
                 return;
             }
             File oldFile = new File(DIRECTORY, names[0]);
             File newFile = new File(DIRECTORY, names[1]);
             if (oldFile.exists() && oldFile.renameTo(newFile)) {
-                out.println("S File renamed successfully");
+                out.println("File renamed successfully");
             } else {
-                out.println("S Rename failed");
+                out.println("Rename failed");
             }
         }
 
         private void sendFile(String fileName, DataOutputStream dataOut) throws IOException {
             File file = new File(DIRECTORY, fileName);
             if (!file.exists()) {
-                dataOut.writeLong(-1); // Send error flag
+                dataOut.writeLong(-1);
                 return;
             }
             dataOut.writeLong(file.length());
@@ -125,7 +125,7 @@ public class Server {
                 byte[] buffer = new byte[4096];
                 int bytesRead;
                 while ((bytesRead = dataIn.read(buffer)) != -1) {
-                    fileOut.write(buffer, 0, bytesRead); //comment
+                    fileOut.write(buffer, 0, bytesRead);
                 }
             }
         }
