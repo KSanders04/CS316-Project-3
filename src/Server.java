@@ -1,3 +1,4 @@
+import java.io.File;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
@@ -31,6 +32,10 @@ public class Server {
             switch (command) {
                 case "D": //Deletes files from local server
                     if(parts.length < 2) break;
+                    File fileToDelete = new File("ServerFiles/" + parts[1]);
+                    boolean deleted = fileToDelete.exists() && fileToDelete.delete();
+                    responseBuffer = ByteBuffer.wrap(deleted ? "S".getBytes() : "F".getBytes());
+                    serverChannel.write(responseBuffer);
                 case "L": //List the file names that exist; Only command that only needs 1 input
                 case "U": //Upload a file to the server
                     if(parts.length < 2) break;
