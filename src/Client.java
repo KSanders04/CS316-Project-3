@@ -17,7 +17,9 @@ public class Client {
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
              DataInputStream dataIn = new DataInputStream(socket.getInputStream());
              DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
-             Scanner scan = new Scanner(System.in)) {
+             Scanner scanner = new Scanner(System.in)) {
+
+            System.out.println("Connected to server at " + serverIp + ":" + serverPort);
 
             while (true) {
                 System.out.print("Please choose an option:\n" +
@@ -27,13 +29,13 @@ public class Client {
                         "4. Download a file from server\n" +
                         "5. Upload a file to server\n" +
                         ">> ");
-                String input = scan.next();
-                if (input.equalsIgnoreCase("EXIT")) break;
+                String command = scanner.nextLine();
+                if (command.equalsIgnoreCase("EXIT")) break;
 
-                String[] parts = input.split(" ", 2);
+                String[] parts = command.split(" ", 2);
                 String operation = parts[0].toUpperCase();
 
-                out.println(input);
+                out.println(command);
 
                 switch (operation) {
                     case "LIST":

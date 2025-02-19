@@ -1,44 +1,133 @@
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.io.*;
+import java.net.*;
 
 public class Server {
-    public static void main(String[] args) throws Exception {
-        ServerSocketChannel listenChannel = ServerSocketChannel.open();
-        listenChannel.bind(new InetSocketAddress(3000));
+    private static final int PORT = 3000;
+    private static final String DIRECTORY = "server_files"; // Folder to store files
 
-        //Caught Exception
-        while(true) {
-            //Accept the client side command call
-            SocketChannel serverChannel = listenChannel.accept();
-            ByteBuffer buffer = ByteBuffer.allocate(1024);
+    public static void main(String[] args) {
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Server is running on port " + PORT + "...");
 
-            int bytesRead = serverChannel.read(buffer);
-            buffer.flip();
-
-            //Processes Request and returns desired request name
-            byte[] requestBytes = new byte[bytesRead];
-            buffer.get(requestBytes);
-            String request = new String(requestBytes);
-            System.out.println("Request recieved: " + request);
-
-            //formatting request for readability and determines command
-            String[] parts = request.split("\\|");
-            String command = parts[0];
-
-            ByteBuffer responseBuffer;
-            switch (command) {
-                case "D": //Deletes files from local server
-                case "F": //List the file names that exist
-                case "U": //Upload a file to the server
-                case "S": //Downloads a file from the server
-                case "R": //Renames a file from the server if it exists
-                default:
-                    System.out.println("Invalid request.");
-                    break;
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Client connected: " + clientSocket.getInetAddress());
+                new ClientHandler(clientSocket).start();
             }
-            serverChannel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static class ClientHandler extends Thread {
+        private final Socket socket;
+
+        public ClientHandler(Socket socket) {
+            this.socket = socket;
+        }
+
+        @Override
+        public void run() {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                 DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
+                 DataInputStream dataIn = new DataInputStream(socket.getInputStream())) {
+
+                String command;
+                while ((command = in.readLine()) != null) {
+                    String[] parts = command.split(" ", 2);
+                    String operation = parts[0];
+
+                    switch (operation.toUpperCase()) {
+                        case "LIST":
+                            listFiles(out);
+                            break;
+                        case "DELETE":
+                            deleteFile(out, parts[1]);
+                            break;
+                        case "RENAME":
+                            renameFile(out, parts[1]);
+                            break;
+                        case "DOWNLOAD":
+                            sendFile(parts[1], dataOut);
+                            break;
+                        case "UPLOAD":
+                            receiveFile(parts[1], dataIn);
+                            out.println("S Upload complete");
+                            break;
+                        default:
+                            out.println("S Invalid command");
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void listFiles(PrintWriter out) {
+            File dir = new File(DIRECTORY);
+            if (!dir.exists() || !dir.isDirectory()) {
+                out.println("S No files found");
+                return;
+            }
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    out.println(file.getName());
+                }
+            }
+            out.println("S END");
+        }
+
+        private void deleteFile(PrintWriter out, String fileName) {
+            File file = new File(DIRECTORY, fileName);
+            if (file.exists() && file.delete()) {
+                out.println("S File deleted successfully");
+            } else {
+                out.println("S File not found or cannot be deleted");
+            }
+        }
+
+        private void renameFile(PrintWriter out, String params) {
+            String[] names = params.split(" ");
+            if (names.length < 2) {
+                out.println("S Invalid rename command");
+                return;
+            }
+            File oldFile = new File(DIRECTORY, names[0]);
+            File newFile = new File(DIRECTORY, names[1]);
+            if (oldFile.exists() && oldFile.renameTo(newFile)) {
+                out.println("S File renamed successfully");
+            } else {
+                out.println("S Rename failed");
+            }
+        }
+
+        private void sendFile(String fileName, DataOutputStream dataOut) throws IOException {
+            File file = new File(DIRECTORY, fileName);
+            if (!file.exists()) {
+                dataOut.writeLong(-1); // Send error flag
+                return;
+            }
+            dataOut.writeLong(file.length());
+            try (FileInputStream fileIn = new FileInputStream(file)) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = fileIn.read(buffer)) != -1) {
+                    dataOut.write(buffer, 0, bytesRead);
+                }
+            }
+        }
+
+        private void receiveFile(String fileName, DataInputStream dataIn) throws IOException {
+            File file = new File(DIRECTORY, fileName);
+            try (FileOutputStream fileOut = new FileOutputStream(file)) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = dataIn.read(buffer)) != -1) {
+                    fileOut.write(buffer, 0, bytesRead);
+                }
+            }
         }
     }
 }
