@@ -125,7 +125,7 @@ public class Server {
                 byte[] buffer = new byte[4096];
                 int bytesRead;
                 while ((bytesRead = dataIn.read(buffer)) != -1) {
-                    fileOut.write(buffer, 0, bytesRead);
+                    fileOut.write(buffer, 0, bytesRead); //comment
                 }
             }
         }

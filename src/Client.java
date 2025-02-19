@@ -95,6 +95,6 @@ public class Client {
                 dataOut.write(buffer, 0, bytesRead);
             }
         }
-        System.out.println("File uploaded successfully.");
+        System.out.println("File uploaded successfully."); //comment
     }
 }
