@@ -43,6 +43,8 @@ public class Client {
                         }
                         break;
                     case "DELETE":
+                        deleteFile(out, in);
+                        break;
                     case "RENAME":
                     case "DOWNLOAD":
                         receiveFile(parts[1], dataIn);
@@ -59,6 +61,15 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void deleteFile(PrintWriter out, BufferedReader in) throws IOException {
+        System.out.print("Enter file to delete: ");
+        Scanner scanner = new Scanner(System.in);
+        String fileToDelete = scanner.nextLine();
+        out.println("DELETE " + fileToDelete);
+        String deleteResponse = in.readLine();
+        System.out.println(deleteResponse.equals("S_OK") ? "File deleted successfully." : "File deletion failed.");
     }
 
     private static void receiveFile(String fileName, DataInputStream dataIn) throws IOException {

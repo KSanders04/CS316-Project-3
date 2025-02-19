@@ -41,7 +41,11 @@ public class Server {
                             listFiles(out);
                             break;
                         case "DELETE":
-                            deleteFile(out, parts[1]);
+                            if (parts.length < 2) {
+                                out.println("S_FAIL");
+                            } else {
+                                deleteFile(out, parts[1]);
+                            }
                             break;
                         case "RENAME":
                             renameFile(out, parts[1]);
@@ -78,14 +82,12 @@ public class Server {
         }
 
         private void deleteFile(PrintWriter out, String fileName) {
-
-
-            File file = new File(DIRECTORY, fileName);
-            if (file.exists() && file.delete()) {
-                out.println("File deleted successfully");
-            } else {
-                out.println("File not found or cannot be deleted");
-            }
+                File file = new File(DIRECTORY, fileName);
+                if (file.exists() && file.delete()) {
+                    out.println("S_OK");
+                } else {
+                    out.println("S_FAIL");
+                }
         }
 
         private void renameFile(PrintWriter out, String params) {
