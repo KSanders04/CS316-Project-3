@@ -8,7 +8,7 @@ public class Server {
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
 
-            while (true) {
+            while (true){
                 Socket clientSocket = serverSocket.accept();
                 new ClientHandler(clientSocket).start();
             }
@@ -130,7 +130,7 @@ public class Server {
         }
 
         private void receiveFile(String fileName, DataInputStream dataIn) throws IOException {
-            File file = new File(DIRECTORY, fileName);
+            File file = new File("ClientFiles", fileName);
 
             try (FileOutputStream fileOut = new FileOutputStream(file)) {
                 byte[] buffer = new byte[4096];
