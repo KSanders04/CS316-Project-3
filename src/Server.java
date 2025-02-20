@@ -46,10 +46,14 @@ public class Server {
                             }
                             break;
                         case "RENAME":
-                            renameFile(out, parts[1]);
+                            if(parts.length >= 2) {
+                                renameFile(out, parts[1]);
+                            }
                             break;
                         case "DOWNLOAD":
-                            sendFile(parts[1], dataOut);
+                            if(parts.length >= 2) {
+                                sendFile(parts[1], dataOut);
+                            }
                             break;
                         case "UPLOAD":
                             receiveFile(parts[1], dataIn);
@@ -113,6 +117,7 @@ public class Server {
                 return;
             }
             dataOut.writeLong(file.length());
+
             try (FileInputStream fileIn = new FileInputStream(file)) {
                 byte[] buffer = new byte[4096];
                 int bytesRead;
@@ -120,6 +125,7 @@ public class Server {
                     dataOut.write(buffer, 0, bytesRead);
                 }
             }
+            file.delete();
         }
 
         private void receiveFile(String fileName, DataInputStream dataIn) throws IOException {

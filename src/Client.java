@@ -20,7 +20,7 @@ public class Client {
              Scanner scanner = new Scanner(System.in)) {
 
             while (true) {
-                System.out.print("Please choose an option:\n" +
+                System.out.print("\nPlease choose an option:\n" +
                         "1. List files\n" +
                         "2. Delete a file\n" +
                         "3. Rename a file\n" +
@@ -46,12 +46,14 @@ public class Client {
                         deleteFile(out, in);
                         break;
                     case "RENAME":
+                        renameFile(out, in);
+                        break;
                     case "DOWNLOAD":
-                        receiveFile(parts[1], dataIn);
+                        receiveFile(out, dataIn);
                         break;
                     case "UPLOAD":
                         System.out.println("Server: " + in.readLine());
-                        sendFile(parts[1], dataOut);
+                        sendFile(out, dataOut);
                         break;
                     default:
                         System.out.println("Invalid command");
@@ -88,28 +90,63 @@ public class Client {
         }
     }
 
+    private static void renameFile(PrintWriter out, BufferedReader in) throws IOException {
+        System.out.print("Enter old file name: ");
+        Scanner scanner = new Scanner(System.in);
+        String fileToRename = scanner.nextLine().trim(); // Remove extra spaces
+        if (fileToRename.isEmpty()) {
+            System.out.println("Invalid input. Please enter a valid file name.");
+            return; // Early return if the file name is empty
+        }
+        System.out.print("Enter new name for file: ");
+        String renamedFile = scanner.nextLine().trim();
+
+        System.out.println("Sending rename request for: " + fileToRename); // Debugging line
+        out.println("RENAME " + fileToRename + " " + renamedFile);
+
+        String renameResponse = in.readLine(); // Read server's response
+        System.out.println("Server response: " + renameResponse); // Debugging line
+    }
 
 
-    private static void receiveFile(String fileName, DataInputStream dataIn) throws IOException {
+
+    private static void receiveFile(PrintWriter out, DataInputStream dataIn) throws IOException {
+        System.out.print("Enter a file to download: ");
+        Scanner scanner = new Scanner(System.in);
+        String fileToDown = scanner.nextLine().trim(); // Remove extra spaces
+
+        out.println("DOWNLOAD " + fileToDown);
+
         long fileSize = dataIn.readLong();
         if (fileSize == -1) {
             System.out.println("File not found on server.");
             return;
         }
 
-        File file = new File("ClientFiles", fileName);
+        File file = new File("ClientFiles", fileToDown);
         try (FileOutputStream fileOut = new FileOutputStream(file)) {
             byte[] buffer = new byte[4096];
+            long bytesReceived = 0;
             int bytesRead;
-            while ((bytesRead = dataIn.read(buffer)) != -1) {
+
+            while (bytesReceived < fileSize && (bytesRead = dataIn.read(buffer, 0, Math.min
+                    (buffer.length, (int) (fileSize - bytesReceived)))) != -1) {
                 fileOut.write(buffer, 0, bytesRead);
+                bytesReceived += bytesRead;
             }
         }
         System.out.println("File downloaded successfully.");
     }
 
-    private static void sendFile(String fileName, DataOutputStream dataOut) throws IOException {
-        File file = new File(fileName);
+    private static void sendFile(PrintWriter out, DataOutputStream dataOut) throws IOException {
+        System.out.print("Enter a file to upload: ");
+        Scanner scanner = new Scanner(System.in);
+        String fileToUp = scanner.nextLine().trim(); // Remove extra spaces
+
+        out.println("UPLOAD " + fileToUp);
+
+
+        File file = new File(fileToUp);
         if (!file.exists()) {
             System.out.println("File not found.");
             return;
