@@ -56,8 +56,9 @@ public class Server {
                             }
                             break;
                         case "UPLOAD":
-                            receiveFile(parts[1], dataIn);
-                            out.println("Upload complete");
+                            if(parts.length >= 2) {
+                                receiveFile(parts[1], dataIn);
+                            }
                             break;
                         default:
                             out.println("Invalid command");
@@ -130,9 +131,11 @@ public class Server {
 
         private void receiveFile(String fileName, DataInputStream dataIn) throws IOException {
             File file = new File(DIRECTORY, fileName);
+
             try (FileOutputStream fileOut = new FileOutputStream(file)) {
                 byte[] buffer = new byte[4096];
                 int bytesRead;
+
                 while ((bytesRead = dataIn.read(buffer)) != -1) {
                     fileOut.write(buffer, 0, bytesRead);
                 }

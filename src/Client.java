@@ -52,7 +52,6 @@ public class Client {
                         receiveFile(out, dataIn);
                         break;
                     case "UPLOAD":
-                        System.out.println("Server: " + in.readLine());
                         sendFile(out, dataOut);
                         break;
                     default:
@@ -143,18 +142,19 @@ public class Client {
         Scanner scanner = new Scanner(System.in);
         String fileToUp = scanner.nextLine().trim(); // Remove extra spaces
 
-        out.println("UPLOAD " + fileToUp);
-
-
         File file = new File(fileToUp);
         if (!file.exists()) {
             System.out.println("File not found.");
             return;
         }
 
+        out.println("UPLOAD " + fileToUp);
+
+
         try (FileInputStream fileIn = new FileInputStream(file)) {
             byte[] buffer = new byte[4096];
             int bytesRead;
+
             while ((bytesRead = fileIn.read(buffer)) != -1) {
                 dataOut.write(buffer, 0, bytesRead);
             }
