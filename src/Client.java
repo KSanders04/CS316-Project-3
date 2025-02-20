@@ -74,11 +74,9 @@ public class Client {
             return; // Early return if the file name is empty
         }
 
-        System.out.println("Sending delete request for: " + fileToDelete); // Debugging line
         out.println("DELETE " + fileToDelete);
 
         String deleteResponse = in.readLine(); // Read server's response
-        System.out.println("Server response: " + deleteResponse); // Debugging line
 
         if ("File deleted successfully.".equals(deleteResponse)) {
             System.out.println("File deleted successfully.\n");
@@ -100,11 +98,9 @@ public class Client {
         System.out.print("Enter new name for file: ");
         String renamedFile = scanner.nextLine().trim();
 
-        System.out.println("Sending rename request for: " + fileToRename); // Debugging line
         out.println("RENAME " + fileToRename + " " + renamedFile);
 
         String renameResponse = in.readLine(); // Read server's response
-        System.out.println("Server response: " + renameResponse); // Debugging line
     }
 
 
@@ -112,7 +108,7 @@ public class Client {
     private static void receiveFile(PrintWriter out, DataInputStream dataIn) throws IOException {
         System.out.print("Enter a file to download: ");
         Scanner scanner = new Scanner(System.in);
-        String fileToDown = scanner.nextLine().trim(); // Remove extra spaces
+        String fileToDown = scanner.nextLine().trim();
 
         out.println("DOWNLOAD " + fileToDown);
 
@@ -140,7 +136,7 @@ public class Client {
     private static void sendFile(PrintWriter out, DataOutputStream dataOut) throws IOException {
         System.out.print("Enter a file to upload: ");
         Scanner scanner = new Scanner(System.in);
-        String fileToUp = scanner.nextLine().trim(); // Remove extra spaces
+        String fileToUp = scanner.nextLine().trim();
 
         File file = new File(fileToUp);
         if (!file.exists()) {

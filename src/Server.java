@@ -85,7 +85,6 @@ public class Server {
         }
 
         private void deleteFile(PrintWriter out, String fileName) {
-            System.out.println("Received delete command for: " + fileName); // Debugging line
             File file = new File(DIRECTORY, fileName);
 
             if (file.exists() && file.delete()) {
