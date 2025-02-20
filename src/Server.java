@@ -33,6 +33,7 @@ public class Server {
 
                 String command;
                 while ((command = in.readLine()) != null) {
+                    command = command.toUpperCase();
                     String[] parts = command.split(" ", 2);
                     String operation = parts[0];
 
@@ -57,7 +58,9 @@ public class Server {
                             break;
                         case "UPLOAD":
                             if(parts.length >= 2) {
-                                receiveFile(parts[1], dataIn);
+                                receiveFile(parts[1], dataIn, out);
+                            } else {
+                                out.print("F");
                             }
                             break;
                         default:
@@ -101,14 +104,21 @@ public class Server {
                 out.println("Invalid rename command");
                 return;
             }
+
             File oldFile = new File(DIRECTORY, names[0]);
             File newFile = new File(DIRECTORY, names[1]);
-            if (oldFile.exists() && oldFile.renameTo(newFile)) {
-                out.println("File renamed successfully");
+
+            if (oldFile.exists()) {
+                if (oldFile.renameTo(newFile)) {
+                    out.println("File renamed successfully");
+                } else {
+                    out.println("Rename failed");
+                }
             } else {
-                out.println("Rename failed");
+                out.println("File does not exist");
             }
         }
+
 
         private void sendFile(String fileName, DataOutputStream dataOut) throws IOException {
             File file = new File(DIRECTORY, fileName);
@@ -128,16 +138,36 @@ public class Server {
             file.delete();
         }
 
-        private void receiveFile(String fileName, DataInputStream dataIn) throws IOException {
-            File file = new File("ClientFiles", fileName);
+        private void receiveFile(String fileName, DataInputStream dataIn, PrintWriter out) throws IOException {
+            File directory = new File(DIRECTORY);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            File file = new File(DIRECTORY, fileName);
+
+            long fileSize = dataIn.readLong();
+
+            if (fileSize < 0) {
+                out.println("F");
+                return;
+            }
 
             try (FileOutputStream fileOut = new FileOutputStream(file)) {
                 byte[] buffer = new byte[4096];
                 int bytesRead;
+                long totalBytesRead = 0;
 
-                while ((bytesRead = dataIn.read(buffer)) != -1) {
+                while (totalBytesRead < fileSize && (bytesRead = dataIn.read(buffer, 0, (int) Math.min(buffer.length, fileSize - totalBytesRead))) != -1) {
                     fileOut.write(buffer, 0, bytesRead);
+                    totalBytesRead += bytesRead;
                 }
+
+                out.println("S");
+                System.out.println("File uploaded successfully: " + file.getAbsoluteFile());
+            } catch (IOException e) {
+                out.println("F");
+                e.printStackTrace();
             }
         }
     }

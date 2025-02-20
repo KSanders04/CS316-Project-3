@@ -27,15 +27,17 @@ public class Client {
                         "4. Download a file from server\n" +
                         "5. Upload a file to server\n" +
                         ">> ");
-                String command = scanner.nextLine();
+                String command = scanner.nextLine().trim().toUpperCase();
                 if (command.equalsIgnoreCase("EXIT")) break;
 
-                String[] parts = command.split(" ", 2);
-                String operation = parts[0].toUpperCase();
+                if (!(command.startsWith("LIST") || command.startsWith("DELETE") || command.startsWith("RENAME") || command.startsWith("DOWNLOAD") || command.startsWith("UPLOAD"))) {
+                    System.out.println("Invalid command");
+                    continue;
+                }
 
                 out.println(command);
 
-                switch (operation) {
+                switch (command.split(" ")[0]) {
                     case "LIST":
                         String response;
                         while (!(response = in.readLine()).equals("END")) {
@@ -54,8 +56,6 @@ public class Client {
                     case "UPLOAD":
                         sendFile(out, dataOut);
                         break;
-                    default:
-                        System.out.println("Invalid command");
                 }
             }
 
@@ -138,14 +138,15 @@ public class Client {
         Scanner scanner = new Scanner(System.in);
         String fileToUp = scanner.nextLine().trim();
 
-        File file = new File(fileToUp);
+        File file = new File("ClientFiles", fileToUp);
         if (!file.exists()) {
             System.out.println("File not found.");
             return;
         }
 
-        out.println("UPLOAD " + fileToUp);
+        out.println("UPLOAD " + file.getName());
 
+        dataOut.writeLong(file.length());
 
         try (FileInputStream fileIn = new FileInputStream(file)) {
             byte[] buffer = new byte[4096];
@@ -157,6 +158,7 @@ public class Client {
         }
         System.out.println("File uploaded successfully.");
     }
+
 
 
 }
