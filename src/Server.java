@@ -157,21 +157,30 @@ public void run() {
                         });
                     }
                     break;
+                // Inside the UPLOAD case in the ClientHandler (server)
                 case "UPLOAD":
                     if (parts.length >= 2) {
                         // Start a new thread to handle the file receiving
                         String fileToUpload = parts[1]; // Capture file name
-                        threadPool.execute(() -> {
+                        Future<?> future = threadPool.submit(() -> {
                             try {
                                 receiveFile(parts[1], dataIn, out); // Call the receiveFile method in a separate thread
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         });
+
+                        // Optionally wait for the upload to complete
+                        try {
+                            future.get(); // This blocks until the file transfer is complete
+                        } catch (InterruptedException | ExecutionException e) {
+                            e.printStackTrace();
+                        }
                     } else {
                         out.println("F");
                     }
                     break;
+
                 default:
                     out.println("Invalid command");
             }
@@ -235,9 +244,6 @@ private void renameFile(PrintWriter out, String params) {
     }
 }
 
-
-
-
 private void sendFile(String fileName, DataOutputStream dataOut) throws IOException {
     File file = new File(DIRECTORY, fileName);
     if (!file.exists()) {
@@ -245,7 +251,6 @@ private void sendFile(String fileName, DataOutputStream dataOut) throws IOExcept
         return;
     }
     dataOut.writeLong(file.length());
-
 
     try (FileInputStream fileIn = new FileInputStream(file)) {
         byte[] buffer = new byte[4096];
@@ -263,18 +268,14 @@ private void receiveFile(String fileName, DataInputStream dataIn, PrintWriter ou
         directory.mkdirs();
     }
 
-
     File file = new File(DIRECTORY, fileName);
 
-
     long fileSize = dataIn.readLong();
-
 
     if (fileSize < 0) {
         out.println("F");
         return;
     }
-
 
     try (FileOutputStream fileOut = new FileOutputStream(file)) {
         byte[] buffer = new byte[4096];
@@ -286,7 +287,6 @@ private void receiveFile(String fileName, DataInputStream dataIn, PrintWriter ou
             fileOut.write(buffer, 0, bytesRead);
             totalBytesRead += bytesRead;
         }
-
 
         out.println("S");
         System.out.println("File uploaded successfully: " + file.getAbsoluteFile());
