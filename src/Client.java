@@ -103,8 +103,6 @@ public class Client {
         String renameResponse = in.readLine(); // Read server's response
     }
 
-
-
     private static void receiveFile(PrintWriter out, DataInputStream dataIn) throws IOException {
         System.out.print("Enter a file to download: ");
         Scanner scanner = new Scanner(System.in);
@@ -158,7 +156,4 @@ public class Client {
         }
         System.out.println("File uploaded successfully.");
     }
-
-
-
 }
